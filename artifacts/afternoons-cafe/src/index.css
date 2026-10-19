@@ -50,3 +50,10 @@ body { font-family:var(--app-font-sans); }
 .photo-placeholder:before { content:'';position:absolute;width:48%;height:48%;left:52%;top:13%;border-radius:50%;background:#e3c9a8;box-shadow:-85px 108px 0 12px #9c785a,45px 150px 0 34px #b68f6b;opacity:.8; }
 .photo-placeholder:after { content:'PHOTO · replaceable';position:absolute;bottom:12px;left:14px;padding:5px 8px;background:rgba(246,239,224,.8);color:#594332;font-size:9px;letter-spacing:.14em;text-transform:uppercase; }
 button,a { -webkit-tap-highlight-color:transparent; }
+.scroll-reveal { opacity:0; transform:translateY(12px); transition:opacity .65s ease,transform .65s ease; }
+.scroll-reveal.is-visible { opacity:1; transform:translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior:auto; }
+  *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+  .scroll-reveal { opacity:1; transform:none; }
+}
