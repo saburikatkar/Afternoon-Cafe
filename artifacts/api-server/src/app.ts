@@ -32,6 +32,10 @@ app.use(express.json({ limit: "32kb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+app.get("/", (_req, res) => {
+  res.json({ status: "ok", service: "Afternoons Cafe API" });
+});
+
 app.use("/api", router);
 
 export default app;

@@ -18,13 +18,12 @@ if (Number.isNaN(port) || port <= 0) {
 
 async function start(): Promise<void> {
   await initializeCafeData();
-  app.listen(port, (err) => {
-    if (err) {
-      logger.error({ err }, "Error listening on port");
-      process.exit(1);
-    }
-
-    logger.info({ port }, "Server listening");
+  const server = app.listen(port, "0.0.0.0", () => {
+    logger.info({ host: "0.0.0.0", port }, "Server listening");
+  });
+  server.on("error", (error: Error) => {
+    logger.error({ err: error, host: "0.0.0.0", port }, "Error listening on port");
+    process.exit(1);
   });
 }
 
