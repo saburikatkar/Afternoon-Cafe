@@ -1,4 +1,4 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import {
   AdminLoginBody,
@@ -23,13 +23,9 @@ import {
   GetAdminReviewsQueryParams,
   GetAdminReviewsResponse,
   GetAdminSessionResponse,
-  GalleryImage,
-  MenuCategory,
-  MenuItem,
   ModerateReviewBody,
   ModerateReviewParams,
   ModerateReviewResponse,
-  SuccessResult,
   UpdateGalleryImageBody,
   UpdateGalleryImageParams,
   UpdateGalleryImageResponse,
@@ -69,11 +65,6 @@ const COOKIE_OPTIONS = {
   path: "/api/admin",
   maxAge: 8 * 60 * 60 * 1000,
 };
-
-function parseId(value: unknown): number | null {
-  const parsed = Number(value);
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
-}
 
 function safeImageUrl(value: string): boolean {
   if (value.startsWith("/") && !value.startsWith("//")) return true;
@@ -169,8 +160,12 @@ router.get("/admin/reviews", async (req, res): Promise<void> => {
 router.patch("/admin/reviews/:id", async (req, res): Promise<void> => {
   const params = ModerateReviewParams.safeParse(req.params);
   const body = ModerateReviewBody.safeParse(req.body);
-  if (!params.success || !body.success) {
-    res.status(400).json({ error: params.error?.message ?? body.error?.message ?? "Invalid review update." });
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
     return;
   }
   const [review] = await db
@@ -216,14 +211,10 @@ router.post("/admin/menu/categories", async (req, res): Promise<void> => {
     .insert(menuCategoriesTable)
     .values({ name: body.data.name.trim(), sortOrder: body.data.sort_order })
     .returning();
-  const result: MenuCategory = {
-    ...category,
-    items: [],
-  };
   res.status(201).json(CreateMenuCategoryResponse.parse({
-    id: result.id,
-    name: result.name,
-    sort_order: result.sortOrder,
+    id: category.id,
+    name: category.name,
+    sort_order: category.sortOrder,
     items: [],
   }));
 });
@@ -231,8 +222,12 @@ router.post("/admin/menu/categories", async (req, res): Promise<void> => {
 router.patch("/admin/menu/categories/:id", async (req, res): Promise<void> => {
   const params = UpdateMenuCategoryParams.safeParse(req.params);
   const body = UpdateMenuCategoryBody.safeParse(req.body);
-  if (!params.success || !body.success) {
-    res.status(400).json({ error: params.error?.message ?? body.error?.message ?? "Invalid category update." });
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
     return;
   }
   const [category] = await db
@@ -297,8 +292,12 @@ router.post("/admin/menu/items", async (req, res): Promise<void> => {
 router.patch("/admin/menu/items/:id", async (req, res): Promise<void> => {
   const params = UpdateMenuItemParams.safeParse(req.params);
   const body = UpdateMenuItemBody.safeParse(req.body);
-  if (!params.success || !body.success) {
-    res.status(400).json({ error: params.error?.message ?? body.error?.message ?? "Invalid menu item update." });
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
     return;
   }
   if (Object.keys(body.data).length === 0) {
@@ -379,8 +378,12 @@ router.post("/admin/gallery", async (req, res): Promise<void> => {
 router.patch("/admin/gallery/:id", async (req, res): Promise<void> => {
   const params = UpdateGalleryImageParams.safeParse(req.params);
   const body = UpdateGalleryImageBody.safeParse(req.body);
-  if (!params.success || !body.success) {
-    res.status(400).json({ error: params.error?.message ?? body.error?.message ?? "Invalid image update." });
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
     return;
   }
   const url = body.data.url.trim();
