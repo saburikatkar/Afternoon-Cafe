@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: cafe
+    description: Public cafe content
+  - name: reviews
+    description: Visitor reviews and moderation
+  - name: admin
+    description: Owner-only management
 paths:
   /healthz:
     get:
@@ -24,7 +30,439 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /menu:
+    get:
+      operationId: getMenu
+      tags: [cafe]
+      summary: Get the cafe menu
+      responses:
+        "200":
+          description: Menu categories and available items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MenuCategory"
+  /gallery:
+    get:
+      operationId: getGallery
+      tags: [cafe]
+      summary: Get gallery photos
+      responses:
+        "200":
+          description: Ordered cafe gallery photos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GalleryImage"
+  /reviews:
+    get:
+      operationId: getReviews
+      tags: [reviews]
+      summary: Get approved visitor reviews
+      responses:
+        "200":
+          description: Approved reviews only
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+    post:
+      operationId: submitReview
+      tags: [reviews]
+      summary: Submit a review for approval
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Review saved as pending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewSubmission"
+        "400":
+          description: Invalid review
+        "429":
+          description: Too many submissions
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Sign in to the owner dashboard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCredentials"
+      responses:
+        "200":
+          description: Signed in; session cookie is set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Invalid username or password
+        "503":
+          description: Admin credentials have not been configured
+  /admin/session:
+    get:
+      operationId: getAdminSession
+      tags: [admin]
+      summary: Check the current owner session
+      security:
+        - AdminCookie: []
+      responses:
+        "200":
+          description: Current admin session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Not signed in
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin]
+      summary: Sign out of the owner dashboard
+      responses:
+        "200":
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+  /admin/reviews:
+    get:
+      operationId: getAdminReviews
+      tags: [admin]
+      summary: List reviews for moderation
+      security:
+        - AdminCookie: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+      responses:
+        "200":
+          description: Reviews matching the selected status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+        "401":
+          description: Not signed in
+  /admin/reviews/{id}:
+    patch:
+      operationId: moderateReview
+      tags: [admin]
+      summary: Approve or reject a review
+      security:
+        - AdminCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewModeration"
+      responses:
+        "200":
+          description: Review updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+        "401":
+          description: Not signed in
+        "404":
+          description: Review not found
+    delete:
+      operationId: deleteReview
+      tags: [admin]
+      summary: Delete a review
+      security:
+        - AdminCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Review deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+        "401":
+          description: Not signed in
+        "404":
+          description: Review not found
+  /admin/menu:
+    get:
+      operationId: getAdminMenu
+      tags: [admin]
+      summary: Get all menu categories and items
+      security:
+        - AdminCookie: []
+      responses:
+        "200":
+          description: Complete menu for editing
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MenuCategory"
+        "401":
+          description: Not signed in
+  /admin/menu/categories:
+    post:
+      operationId: createMenuCategory
+      tags: [admin]
+      summary: Add a menu category
+      security:
+        - AdminCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuCategoryInput"
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuCategory"
+        "401":
+          description: Not signed in
+  /admin/menu/categories/{id}:
+    patch:
+      operationId: updateMenuCategory
+      tags: [admin]
+      summary: Update a menu category
+      security:
+        - AdminCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuCategoryInput"
+      responses:
+        "200":
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuCategory"
+        "401":
+          description: Not signed in
+        "404":
+          description: Category not found
+    delete:
+      operationId: deleteMenuCategory
+      tags: [admin]
+      summary: Delete a category and its items
+      security:
+        - AdminCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Category and its menu items deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+        "401":
+          description: Not signed in
+        "404":
+          description: Category not found
+  /admin/menu/items:
+    post:
+      operationId: createMenuItem
+      tags: [admin]
+      summary: Add a menu item
+      security:
+        - AdminCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemInput"
+      responses:
+        "201":
+          description: Menu item created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuItem"
+        "401":
+          description: Not signed in
+  /admin/menu/items/{id}:
+    patch:
+      operationId: updateMenuItem
+      tags: [admin]
+      summary: Update a menu item
+      security:
+        - AdminCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemUpdate"
+      responses:
+        "200":
+          description: Menu item updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuItem"
+        "401":
+          description: Not signed in
+        "404":
+          description: Menu item not found
+    delete:
+      operationId: deleteMenuItem
+      tags: [admin]
+      summary: Delete a menu item
+      security:
+        - AdminCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Menu item deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+        "401":
+          description: Not signed in
+        "404":
+          description: Menu item not found
+  /admin/gallery:
+    get:
+      operationId: getAdminGallery
+      tags: [admin]
+      summary: Get gallery images for editing
+      security:
+        - AdminCookie: []
+      responses:
+        "200":
+          description: All gallery images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GalleryImage"
+        "401":
+          description: Not signed in
+    post:
+      operationId: createGalleryImage
+      tags: [admin]
+      summary: Add a gallery image
+      security:
+        - AdminCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GalleryImageInput"
+      responses:
+        "201":
+          description: Gallery image created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GalleryImage"
+        "401":
+          description: Not signed in
+  /admin/gallery/{id}:
+    patch:
+      operationId: updateGalleryImage
+      tags: [admin]
+      summary: Update a gallery image
+      security:
+        - AdminCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GalleryImageInput"
+      responses:
+        "200":
+          description: Gallery image updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GalleryImage"
+        "401":
+          description: Not signed in
+        "404":
+          description: Gallery image not found
+    delete:
+      operationId: deleteGalleryImage
+      tags: [admin]
+      summary: Delete a gallery image
+      security:
+        - AdminCookie: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Gallery image deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+        "401":
+          description: Not signed in
+        "404":
+          description: Gallery image not found
 components:
+  securitySchemes:
+    AdminCookie:
+      type: apiKey
+      in: cookie
+      name: afternoons_admin
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +471,120 @@ components:
           type: string
       required:
         - status
+    MenuItem:
+      type: object
+      required: [id, category_id, name, description, price, is_available, sort_order]
+      properties:
+        id: { type: integer }
+        category_id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        price: { type: number }
+        is_available: { type: boolean }
+        sort_order: { type: integer }
+    MenuCategory:
+      type: object
+      required: [id, name, sort_order, items]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        sort_order: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MenuItem"
+    MenuCategoryInput:
+      type: object
+      required: [name, sort_order]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        sort_order: { type: integer, minimum: 0 }
+    MenuItemInput:
+      type: object
+      required: [category_id, name, description, price, is_available, sort_order]
+      properties:
+        category_id: { type: integer, minimum: 1 }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string, maxLength: 300 }
+        price: { type: number, minimum: 0, maximum: 100000 }
+        is_available: { type: boolean }
+        sort_order: { type: integer, minimum: 0 }
+    MenuItemUpdate:
+      type: object
+      properties:
+        category_id: { type: integer, minimum: 1 }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string, maxLength: 300 }
+        price: { type: number, minimum: 0, maximum: 100000 }
+        is_available: { type: boolean }
+        sort_order: { type: integer, minimum: 0 }
+    GalleryImage:
+      type: object
+      required: [id, url, caption, sort_order]
+      properties:
+        id: { type: integer }
+        url: { type: string }
+        caption: { type: string }
+        sort_order: { type: integer }
+    GalleryImageInput:
+      type: object
+      required: [url, caption, sort_order]
+      properties:
+        url: { type: string, minLength: 1, maxLength: 2048 }
+        caption: { type: string, maxLength: 180 }
+        sort_order: { type: integer, minimum: 0 }
+    Review:
+      type: object
+      required: [id, name, rating, message, status, created_at]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        message: { type: string }
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        created_at: { type: string, format: date-time }
+    ReviewInput:
+      type: object
+      required: [name, rating, message]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        message: { type: string, minLength: 8, maxLength: 1200 }
+        website:
+          type: string
+          maxLength: 200
+          description: Honeypot field; leave empty.
+    ReviewSubmission:
+      type: object
+      required: [id, status, message]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [pending] }
+        message: { type: string }
+    ReviewModeration:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+    AdminCredentials:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 1, maxLength: 80 }
+        password: { type: string, minLength: 1, maxLength: 200 }
+    AdminSession:
+      type: object
+      required: [authenticated, username]
+      properties:
+        authenticated: { type: boolean }
+        username: { type: string }
+    SuccessResult:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean }
 

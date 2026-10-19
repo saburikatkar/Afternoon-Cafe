@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Afternoons Cafe"
+description = "A mobile-first neighborhood cafe website for Afternoons Cafe in Playshire Sports Club, Wagholi, with public menu and reviews, directions, and private owner review and menu management."
+version = "1.0.0"
+id = "artifacts/afternoons-cafe"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21643
+
+[services.development]
+run = "pnpm --filter @workspace/afternoons-cafe run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/afternoons-cafe", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/afternoons-cafe/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21643"
+BASE_PATH = "/"
