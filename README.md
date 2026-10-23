@@ -1,47 +1,88 @@
-# Afternoons Cafe
+# Afternoon's Cafe
 
-A mobile-first website and owner dashboard for Afternoons Cafe, a neighbourhood cafe inside Playshire Sports Club in Wagholi, Pune. Visitors can browse the menu and photo gallery, get directions, and send a review for approval. The owner can moderate reviews and manage menu items and gallery links at `/admin`.
+A mobile-first website for Afternoons Cafe in Wagholi, Pune. Guests can browse the menu and photo gallery, and submit a review using **Leave a note**. Reviews remain pending until the owner approves them. The owner dashboard at `/admin` manages menu items, gallery links, and reviews.
 
-## Run in Replit
+## Tech stack
 
-The project uses a pnpm workspace with a React + Vite website, an Express API, Drizzle ORM, and PostgreSQL. The Replit workflows route the website and `/api` through the same origin.
+- React, TypeScript, and Vite
+- Node.js and Express
+- PostgreSQL with Drizzle ORM
+- pnpm workspaces
 
-1. Open this repository as a Replit project and install dependencies with `pnpm install`.
-2. Provision or use the Replit PostgreSQL database. `DATABASE_URL` is provided by the database environment.
-3. Add these values through Replit Secrets (never commit them):
-   - `SESSION_SECRET` — a long random value used to sign the admin session cookie.
-   - `ADMIN_USERNAME` — the owner login name.
-   - `ADMIN_PASSWORD` — the owner login password; use at least 12 characters.
-4. Apply the development schema with `pnpm --filter @workspace/db run push`.
-5. Generate API client and validation code after changing `lib/api-spec/openapi.yaml` with `pnpm --filter @workspace/api-spec run codegen`.
-6. Start the **API Server** and **Afternoons Cafe** workflows. On first start, an empty database receives sample menu items and three clearly labelled sample reviews.
+## Local setup
 
-For a checkout outside Replit, use Node.js 24 and pnpm. The app expects the website and API to share an origin, with `/api/*` routed to the Express service; configure an equivalent reverse proxy before running the two services locally.
+Prerequisites: Node.js 24 or later, pnpm 10, and a PostgreSQL database.
 
-## Email alerts
+1. Install dependencies:
 
-Review submissions are saved as `pending` even if email is not configured. To send an owner alert for each submission, add the following values to the server environment:
+   ```sh
+   pnpm install
+   ```
 
-- `SMTP_HOST`
-- `SMTP_PORT` (usually `587` or `465`)
-- `SMTP_USERNAME` and `SMTP_PASSWORD` (if the mail server requires authentication)
-- `SMTP_FROM`
-- `OWNER_ALERT_EMAIL`
-- `SMTP_SECURE=true` when using implicit TLS (port 465 is detected automatically)
+2. Set the environment variables listed below. The API uses port `5000` by default and the website uses `5173`.
+3. Apply the database schema:
 
-Without these settings the review still appears in the admin queue, but no email is sent. No email provider is connected by default.
+   ```sh
+   pnpm --filter @workspace/db run push
+   ```
 
-## Useful commands
+4. Start the API server in one terminal:
 
-- `pnpm run typecheck` — typecheck workspace packages.
-- `pnpm --filter @workspace/api-server run typecheck` — typecheck the API.
-- `pnpm --filter @workspace/afternoons-cafe run typecheck` — typecheck the website.
-- `pnpm --filter @workspace/db run push` — apply schema changes to the development database.
+   ```sh
+   pnpm --filter @workspace/api-server run dev
+   ```
 
-## Site details to replace before launch
+5. Start the website in another terminal:
 
-The public page includes the provided Wagholi address, daily 2 pm opening time, ₹200–400 per-person range, WhatsApp number, and 4.7 Google rating from 372 reviews. The three cafe photos supplied by the owner are optimized and used in the hero and gallery. Menu items and the three approved review records are setup examples; replace them with current menu details and real guest reviews. The full-menu URL and Instagram profile remain placeholders until the owner supplies them.
+   ```sh
+   pnpm --filter @workspace/afternoons-cafe run dev
+   ```
 
-## Keeping secrets out of Git
+6. Open [http://localhost:5173](http://localhost:5173). Vite proxies `/api` requests to the Express server.
 
-`.gitignore` excludes `node_modules`, `.env` files, local credentials, and private key files. Use Replit Secrets for credentials and do not add secret values to source files, README examples, or commits.
+| Environment variable |
+| --- |
+| `PORT` |
+| `VITE_PORT` |
+| `API_PORT` |
+| `PREVIEW_PORT` |
+| `DATABASE_URL` |
+| `SESSION_SECRET` |
+| `ADMIN_USERNAME` |
+| `ADMIN_PASSWORD` |
+| `SMTP_HOST` |
+| `SMTP_PORT` |
+| `SMTP_USERNAME` |
+| `SMTP_PASSWORD` |
+| `SMTP_FROM` |
+| `OWNER_ALERT_EMAIL` |
+| `SMTP_SECURE` |
+
+Email alerts are optional. Reviews are stored for owner approval even when SMTP is not configured.
+
+## Production build and start
+
+```sh
+pnpm install --frozen-lockfile
+pnpm run build
+pnpm --filter @workspace/api-server run start
+```
+
+The build creates the website in `artifacts/afternoons-cafe/dist/public`; the Express server serves that build and the `/api` routes from one origin. Set the database and admin environment variables before starting the server.
+
+## Deploy to Render
+
+1. Create a PostgreSQL database in Render.
+2. Create a **Web Service** from this repository and select Node.js.
+3. Set the build command to `pnpm install --frozen-lockfile && pnpm run build`.
+4. Set the start command to `pnpm --filter @workspace/api-server run start`.
+5. Set `NODE_VERSION` to `24`.
+6. Add `DATABASE_URL` using the Render database's internal connection string. Add `SESSION_SECRET`, `ADMIN_USERNAME`, and `ADMIN_PASSWORD`; configure the SMTP variables only if owner email alerts are needed.
+7. Deploy. Render supplies `PORT`; the service serves both the website and API at the service URL.
+
+Useful checks:
+
+```sh
+pnpm run typecheck
+pnpm run build
+```
