@@ -18,6 +18,11 @@ node_modules
 *.pem
 *.key
 
+# Server runtime data and uploaded files
+/server/.data/
+/server/uploads/*
+!/server/uploads/.gitkeep
+
 # IDEs and editors
 /.idea
 .project
