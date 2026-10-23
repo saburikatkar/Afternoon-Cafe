@@ -1,4 +1,4 @@
-import { db, menuCategoriesTable, menuItemsTable, reviewsTable } from "@workspace/db";
+import { db, galleryImagesTable, menuCategoriesTable, menuItemsTable, reviewsTable } from "@workspace/db";
 import { logger } from "./logger";
 import { syncAdminUserFromSecrets } from "./admin-auth";
 
@@ -51,6 +51,31 @@ export async function initializeCafeData(): Promise<void> {
       },
     ]);
     logger.info("Afternoons Cafe sample reviews seeded");
+  }
+
+  const existingGalleryImages = await db
+    .select({ id: galleryImagesTable.id })
+    .from(galleryImagesTable)
+    .limit(1);
+  if (existingGalleryImages.length === 0) {
+    await db.insert(galleryImagesTable).values([
+      {
+        url: "/images/cafe-balcony-evening.webp",
+        caption: "A balcony seat beneath the lanterns",
+        sortOrder: 0,
+      },
+      {
+        url: "/images/cafe-woven-canopy.webp",
+        caption: "The woven canopy, lit for the evening",
+        sortOrder: 1,
+      },
+      {
+        url: "/images/cafe-evening-seats.webp",
+        caption: "Tables tucked under the warm lights",
+        sortOrder: 2,
+      },
+    ]);
+    logger.info("Afternoons Cafe uploaded photos added to the gallery");
   }
 
   await syncAdminUserFromSecrets();

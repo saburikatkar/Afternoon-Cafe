@@ -52,7 +52,7 @@ Guests can browse the menu, gallery, location, and approved reviews, then send a
 - Never commit `.env` files, credentials, or API secrets; use Replit Secrets.
 - `pnpm --filter @workspace/db run push` targets the development database only.
 - Review email alerts do not send until SMTP values are configured.
-- The owner has not supplied the full-menu URL, Instagram profile, or real cafe photos yet.
+- The owner has supplied the cafe photos; the full-menu URL and Instagram profile are still pending.
 
 ## Pointers
 

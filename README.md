@@ -40,7 +40,7 @@ Without these settings the review still appears in the admin queue, but no email
 
 ## Site details to replace before launch
 
-The public page includes the provided Wagholi address, daily 2 pm opening time, ₹200–400 per-person range, WhatsApp number, and 4.7 Google rating from 372 reviews. Menu items and the three approved review records are setup examples; replace them with current menu details and real guest reviews. The full-menu URL, Instagram profile, and cafe photos are placeholders until the owner supplies them.
+The public page includes the provided Wagholi address, daily 2 pm opening time, ₹200–400 per-person range, WhatsApp number, and 4.7 Google rating from 372 reviews. The three cafe photos supplied by the owner are optimized and used in the hero and gallery. Menu items and the three approved review records are setup examples; replace them with current menu details and real guest reviews. The full-menu URL and Instagram profile remain placeholders until the owner supplies them.
 
 ## Keeping secrets out of Git
 
